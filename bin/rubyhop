@@ -1,3 +1,8 @@
 #!/usr/bin/env ruby
 require "rubyhop"
-RubyhopGame.new.show
+
+if ARGV[0] == "--mute"
+  RubyhopGame.new(800, 600, false, false).show
+else
+  RubyhopGame.new(800, 600, false, true).show
+end

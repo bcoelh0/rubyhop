@@ -6,7 +6,7 @@ end
 
 class Player
   attr_accessor :x, :y, :alive
-  def initialize level
+  def initialize level, sounds
     @level = level
     @window = @level.window
     # position
@@ -14,8 +14,10 @@ class Player
     @gravity  = -0.25
     @hop      = 7.5
     # sounds
-    @sound    = Gosu::Sample.new @window, get_my_file("hop.mp3")
-    @gameover = Gosu::Sample.new @window, get_my_file("gameover.mp3")
+    if sounds
+      @sound    = Gosu::Sample.new @window, get_my_file("hop.mp3")
+      @gameover = Gosu::Sample.new @window, get_my_file("gameover.mp3")
+    end
     # images
     @rise = Gosu::Image.new @window, get_my_file("rubyguy-rise.png")
     @fall = Gosu::Image.new @window, get_my_file("rubyguy-fall.png")
@@ -23,7 +25,7 @@ class Player
   end
   def hop
     if @alive
-      @sound.play
+      @sound.play unless @sound.nil?
       @velocity += @hop
     end
   end
@@ -37,7 +39,7 @@ class Player
     if @alive
       # Set velocity to one last hop
       @velocity = 5.0
-      @gameover.play
+      @gameover.play unless @sound.nil?
       @alive = false
     end
   end
@@ -96,11 +98,13 @@ end
 
 class HopLevel
   attr_accessor :window, :movement, :score
-  def initialize window
+  def initialize window, sounds
     @window = window
-    @music = Gosu::Song.new @window, get_my_file("music.mp3")
-    @music.play true
-    @player = Player.new self
+    if sounds
+      @music = Gosu::Song.new @window, get_my_file("music.mp3")
+      @music.play true
+    end
+    @player = Player.new self, sounds
     @hoops = 6.times.map { Hoop.new self }
     init_hoops!
     @font = Gosu::Font.new @window, Gosu::default_font_name, 20
@@ -312,8 +316,8 @@ end
 class RubyhopGame < Gosu::Window
   VERSION = "1.3.1"
   attr_reader :time, :sounds, :score, :high_score
-  def initialize width=800, height=600, fullscreen=false
-    super
+  def initialize width=800, height=600, fullscreen=false, sound=true
+    super(width, height, fullscreen)
 
     self.caption = "Ruby Hop - #{VERSION}"
     @background = Gosu::Image.new self, get_my_file("background.png")
@@ -323,7 +327,7 @@ class RubyhopGame < Gosu::Window
 
     # Levels
     @title = TitleLevel.new self
-    @hop   = HopLevel.new   self
+    @hop   = HopLevel.new   self, sound
     @fail  = FailLevel.new  self
 
     @title.on_continue { play! }
